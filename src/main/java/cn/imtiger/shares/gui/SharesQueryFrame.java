@@ -6,6 +6,10 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -22,6 +26,14 @@ public class SharesQueryFrame extends JFrame {
 	JFrame frame;
     JTextField textField = new JTextField("sh000001", 8);
 	JDialog dialog = new JDialog();
+    JLabel szzzVal = new JLabel();
+    JLabel szczVal = new JLabel();
+    JLabel cybzVal = new JLabel();
+    JLabel hs300Val = new JLabel();
+    JLabel szzzPer = new JLabel();
+    JLabel szczPer = new JLabel();
+    JLabel cybzPer = new JLabel();
+    JLabel hs300Per = new JLabel();
     
 	public SharesQueryFrame() {
         // 创建及设置窗口
@@ -72,36 +84,90 @@ public class SharesQueryFrame extends JFrame {
         
         // 上证综指 sh000001
         JLabel szzz = new JLabel("上证综指");
-        szzz.setBounds(6, 40, 90, 28);
+        szzz.setBounds(6, 45, 89, 28);
         szzz.setForeground(Color.LIGHT_GRAY);
         szzz.setFont(new Font("黑体", Font.BOLD, 16));
         queryPanel.add(szzz);
+        szzzVal.setBounds(95, 45, 115, 28);
+        szzzVal.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(szzzVal);
+        szzzPer.setBounds(210, 45, 90, 28);
+        szzzPer.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(szzzPer);
         
         // 深证成指 sz399001
         JLabel szcz = new JLabel("深证成指");
-        szcz.setBounds(6, 70, 90, 28);
+        szcz.setBounds(6, 75, 89, 28);
         szcz.setForeground(Color.LIGHT_GRAY);
         szcz.setFont(new Font("黑体", Font.BOLD, 16));
         queryPanel.add(szcz);
+        szczVal.setBounds(95, 75, 115, 28);
+        szczVal.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(szczVal);
+        szczPer.setBounds(210, 75, 90, 28);
+        szczPer.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(szczPer);
         
         // 创业板指 sz399006
         JLabel cybz = new JLabel("创业板指");
-        cybz.setBounds(6, 100, 90, 28);
+        cybz.setBounds(6, 105, 89, 28);
         cybz.setForeground(Color.LIGHT_GRAY);
         cybz.setFont(new Font("黑体", Font.BOLD, 16));
         queryPanel.add(cybz);
+        cybzVal.setBounds(95, 105, 115, 28);
+        cybzVal.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(cybzVal);
+        cybzPer.setBounds(210, 105, 90, 28);
+        cybzPer.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(cybzPer);
         
         // 沪深300 sz399300
         JLabel hs300 = new JLabel("沪深300");
-        hs300.setBounds(6, 130, 90, 28);
+        hs300.setBounds(6, 135, 89, 28);
         hs300.setForeground(Color.LIGHT_GRAY);
         hs300.setFont(new Font("黑体", Font.BOLD, 16));
         queryPanel.add(hs300);
+        hs300Val.setBounds(95, 135, 115, 28);
+        hs300Val.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(hs300Val);
+        hs300Per.setBounds(210, 135, 90, 28);
+        hs300Per.setFont(new Font("黑体", Font.BOLD, 16));
+        queryPanel.add(hs300Per);
+        
+        // 刷新股指信息
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        Thread thread = new Thread("SharesRefresh") {
+			@Override
+			public void run() {
+				fillIndex(szzzVal, szzzPer, SharesService.sharesQuery("sh000001"));
+				fillIndex(szczVal, szczPer, SharesService.sharesQuery("sz399001"));
+				fillIndex(cybzVal, cybzPer, SharesService.sharesQuery("sz399006"));
+				fillIndex(hs300Val, hs300Per, SharesService.sharesQuery("sz399300"));
+			}
+        };
+        service.scheduleWithFixedDelay(thread, 0, 2, TimeUnit.SECONDS);
         
         // 显示窗口
         this.pack();
         this.setVisible(true);
     }
+	
+	private void fillIndex(JLabel label, JLabel perLabel, String[] data) {
+		if (data != null && data.length == 33) {
+			// 涨跌幅
+			DecimalFormat df = new DecimalFormat("#0.00");
+			Double ups = Double.parseDouble(data[3]) / Double.parseDouble(data[2]) * 100 - 100;
+			String upsstr = df.format(ups) + "%";
+			
+			label.setText(data[3]);
+			label.setForeground(ups > 0 ? Color.RED : (ups == 0 ? Color.LIGHT_GRAY : new Color(0, 188, 0)));
+			perLabel.setText((ups > 0 ? "▲" : (ups == 0 ? "—" : "▼")) + " " + (ups < 0 ? upsstr.substring(1) : upsstr));
+			perLabel.setForeground(ups > 0 ? Color.RED : (ups == 0 ? Color.LIGHT_GRAY : new Color(0, 188, 0)));
+		} else {
+			label.setText("暂无数据");
+			label.setForeground(Color.WHITE);
+		}
+	}
 	
 	private void showDialog(String text) {
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
