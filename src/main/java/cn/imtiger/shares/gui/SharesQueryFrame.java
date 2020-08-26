@@ -64,6 +64,7 @@ public class SharesQueryFrame extends JFrame {
     	JButton button = new JButton("查询");
     	button.setFont(new Font("黑体", Font.PLAIN, 14));
         button.setBounds(243, 8, 48, 24);
+        this.getRootPane().setDefaultButton(button);
         button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String code = textField.getText();
